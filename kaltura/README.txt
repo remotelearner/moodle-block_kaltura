@@ -1,6 +1,6 @@
 +Install instructions+
 
-Copy all of the file to blocks/kaltura
+Copy the kaltura directory into your blocks directory
 
 +Requirements+
 
