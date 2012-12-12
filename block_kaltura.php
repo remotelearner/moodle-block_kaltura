@@ -24,7 +24,7 @@
 class block_kaltura extends block_base {
     function init() {
         $this->title   = get_string('blockname','block_kaltura');
-        $this->version = 2012060805;
+        $this->version = 2012101200;
         $this->release  = '1.2';
 
     }
@@ -189,73 +189,75 @@ class block_kaltura extends block_base {
 
 
         $instance_obj = $data->info;
-        $instancedata =
-        $instance_obj['BLOCK_KALTURA_ENTRIES'][0]['#']['BLOCK_KALTURA_ENTRY'];
-
-        for ($i = 0; $i < count($instancedata); $i++) {
-
-            $activityinstance = $instancedata[$i];
-
-            $kaltura                = new stdClass();
-            $oldid                  = $activityinstance['#']['ID'][0]['#'];
-            $kaltura->courseid      = $activityinstance['#']['COURSEID'][0]['#'];
-            $kaltura->entry_id      = addslashes($activityinstance['#']['ENTRYID'][0]['#']);
-            $kaltura->dimensions    = addslashes($activityinstance['#']['DIMENSIONS'][0]['#']);
-            $kaltura->size          = addslashes($activityinstance['#']['SIZE'][0]['#']);
-            $kaltura->custom_width  = addslashes($activityinstance['#']['CUSTOMWIDTH'][0]['#']);
-            $kaltura->design        = addslashes($activityinstance['#']['DESIGN'][0]['#']);
-            $kaltura->title         = addslashes($activityinstance['#']['TITLE'][0]['#']);
-
-            if (empty($kaltura->title)) {
-                $kaltura->title = '...';
-            }
-
-            $kaltura->context       = addslashes($activityinstance['#']['CONTEXT'][0]['#']);
-
-            // Determine the activity type and get the new ID of the submission
-            $table_name = '';
-            $context = '';
-            $activity_instance_id = false;
-
-            if (false !== strpos($kaltura->context, 'S_')) {
-
-                $activity_instance_id   = substr($kaltura->context, 2);
-                $context                = 'S_';
-                $table_name             = 'assignment_submission';
-            } elseif (false !== strpos($kaltura->context, 'R_')) {
-
-                $activity_instance_id   = substr($kaltura->context, 2);
-                $context                = 'R_';
-                $table_name             = 'resource';
-            }
-
-            if (false !== $activity_instance_id) {
-                $new_instance = get_record('backup_ids',
-                                           'backup_code', $restore->backup_unique_code,
-                                           'table_name', $table_name,
-                                           'old_id', $activity_instance_id,
-                                           'new_id');
-
-                if ($new_instance) {
-                    $kaltura->context = $context . $new_instance->new_id;
+        
+        if (isset($instance_obj['BLOCK_KALTURA_ENTRIES'][0]['#']['BLOCK_KALTURA_ENTRY'])) {
+            $instancedata =
+            $instance_obj['BLOCK_KALTURA_ENTRIES'][0]['#']['BLOCK_KALTURA_ENTRY'];
+    
+            for ($i = 0; $i < count($instancedata); $i++) {
+    
+                $activityinstance = $instancedata[$i];
+    
+                $kaltura                = new stdClass();
+                $oldid                  = $activityinstance['#']['ID'][0]['#'];
+                $kaltura->courseid      = $activityinstance['#']['COURSEID'][0]['#'];
+                $kaltura->entry_id      = addslashes($activityinstance['#']['ENTRYID'][0]['#']);
+                $kaltura->dimensions    = addslashes($activityinstance['#']['DIMENSIONS'][0]['#']);
+                $kaltura->size          = addslashes($activityinstance['#']['SIZE'][0]['#']);
+                $kaltura->custom_width  = addslashes($activityinstance['#']['CUSTOMWIDTH'][0]['#']);
+                $kaltura->design        = addslashes($activityinstance['#']['DESIGN'][0]['#']);
+                $kaltura->title         = addslashes($activityinstance['#']['TITLE'][0]['#']);
+    
+                if (empty($kaltura->title)) {
+                    $kaltura->title = '...';
                 }
-            } else {
-                return false;
+    
+                $kaltura->context       = addslashes($activityinstance['#']['CONTEXT'][0]['#']);
+    
+                // Determine the activity type and get the new ID of the submission
+                $table_name = '';
+                $context = '';
+                $activity_instance_id = false;
+    
+                if (false !== strpos($kaltura->context, 'S_')) {
+    
+                    $activity_instance_id   = substr($kaltura->context, 2);
+                    $context                = 'S_';
+                    $table_name             = 'assignment_submission';
+                } elseif (false !== strpos($kaltura->context, 'R_')) {
+    
+                    $activity_instance_id   = substr($kaltura->context, 2);
+                    $context                = 'R_';
+                    $table_name             = 'resource';
+                }
+    
+                if (false !== $activity_instance_id) {
+                    $new_instance = get_record('backup_ids',
+                                               'backup_code', $restore->backup_unique_code,
+                                               'table_name', $table_name,
+                                               'old_id', $activity_instance_id,
+                                               'new_id');
+    
+                    if ($new_instance) {
+                        $kaltura->context = $context . $new_instance->new_id;
+                    }
+                } else {
+                    return false;
+                }
+    
+                $kaltura->entry_type    = addslashes($activityinstance['#']['ENTRYTYPE'][0]['#']);
+                $kaltura->media_type    = addslashes($activityinstance['#']['MEDIATYPE'][0]['#']);
+    
+    
+                $kaltura->courseid = $restore->course_id;
+                insert_record('block_kaltura_entries', $kaltura);
+    
+                if (!defined('RESTORE_SILENTLY')) {
+                    echo "<li>".get_string('blockname','block_kaltura')." \"".format_string(stripslashes($kaltura->title), true)."\"</li>";
+                }
+    
             }
-
-            $kaltura->entry_type    = addslashes($activityinstance['#']['ENTRYTYPE'][0]['#']);
-            $kaltura->media_type    = addslashes($activityinstance['#']['MEDIATYPE'][0]['#']);
-
-
-            $kaltura->courseid = $restore->course_id;
-            insert_record('block_kaltura_entries', $kaltura);
-
-            if (!defined('RESTORE_SILENTLY')) {
-                echo "<li>".get_string('blockname','block_kaltura')." \"".format_string(stripslashes($kaltura->title), true)."\"</li>";
-            }
-
         }
-
 
         return true;
     }
